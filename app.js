@@ -87,6 +87,7 @@
     const schema = joi.object({
       request_id: joi.string().required(),
       code: joi.string().required(),
+      phone: joi.string().required(),
       start_date: joi.string().pattern(dateFormat).required()
         .messages({
           "string.pattern.base": `"start_date" must be in YYYY-MM-DD format`
@@ -168,6 +169,7 @@
     const data = {
       request_id: requestId,
       code: document.getElementById('code').value || generateBookingCode(6),
+      phone: document.getElementById('phone').value,
       start_date: dayjs(startDate.trim(), "DD-MM-YYYY").format('YYYY-MM-DD'),
       end_date: dayjs(endDate.trim(), "DD-MM-YYYY").format('YYYY-MM-DD'),
       budget: document.getElementById('budget').value,
@@ -190,7 +192,12 @@
 
     document.querySelector('button[name="submit"]').textContent = 'Please wait...'
     document.querySelector('button[name="submit"]').setAttribute('disabled', 'disabled');
-    fetch('https://meidi.n8n.superlazy.ai/webhook-test/book', {
+
+    let webhookUrl = url.searchParams.get('mode')?.toLowerCase() === 'test'
+      ? 'https://meidi.n8n.superlazy.ai/webhook-test/book'
+      : 'https://meidi.n8n.superlazy.ai/webhook/book'
+
+    fetch(webhookUrl, {
       method: 'POST',
       headers: {
         'Accept': 'application/json',
