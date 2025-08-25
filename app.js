@@ -3,6 +3,8 @@
   dayjs.extend(window.dayjs_plugin_customParseFormat);
 
   const url = new URL(location.href);
+  const requestId = crypto.randomUUID();
+
   let datepickers = [];
 
   const airDatePickerConfig = {
@@ -83,6 +85,7 @@
 
     // Main schema
     const schema = joi.object({
+      request_id: joi.string().required(),
       code: joi.string().required(),
       start_date: joi.string().pattern(dateFormat).required()
         .messages({
@@ -104,6 +107,10 @@
   const fillForm = (base64url) => {
     const data = decodeFromBase64Url(base64url);
     console.log(data);
+
+    if (data.code) {
+      document.getElementById('code').value = data.code;
+    }
 
     if (data.Email) {
       document.getElementById('email').value = data.Email;
@@ -159,7 +166,8 @@
     });
 
     const data = {
-      code: generateBookingCode(6),
+      request_id: requestId,
+      code: document.getElementById('code').value || generateBookingCode(6),
       start_date: dayjs(startDate.trim(), "DD-MM-YYYY").format('YYYY-MM-DD'),
       end_date: dayjs(endDate.trim(), "DD-MM-YYYY").format('YYYY-MM-DD'),
       budget: document.getElementById('budget').value,
@@ -180,6 +188,8 @@
       return;
     }
 
+    document.querySelector('button[name="submit"]').textContent = 'Please wait...'
+    document.querySelector('button[name="submit"]').setAttribute('disabled', 'disabled');
     fetch('https://meidi.n8n.superlazy.ai/webhook-test/book', {
       method: 'POST',
       headers: {
@@ -190,6 +200,7 @@
     })
       .then(response => response.json())
       .then(response => {
+      document.querySelector('button[name="submit"]').textContent = 'Submitted'
         console.log(response);
       });
   });
